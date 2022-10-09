@@ -57,6 +57,23 @@ const updateEntity = (tableName, entity) => {
   });
 };
 
+const deleteEntity = (tableName, entity) => {
+  return new Promise((resolve, reject) => {
+    tableSvc.deleteEntity(
+      tableName,
+      entity,
+      (error, result, response) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      }
+    );
+  });
+};
+
 exports.insertEntity = insertEntity;
 exports.queryEntities = queryEntities;
 exports.updateEntity = updateEntity;
+exports.deleteEntity = deleteEntity;
