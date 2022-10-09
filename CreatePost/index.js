@@ -1,41 +1,27 @@
-const { insertEntity } = require("../services/tableService");
+const Joi = require("joi");
+const MiddlewareHandler = require("azure-middleware");
+const createPostHandler = require("./handler");
+const { validateBody } = require("../middleware/validator");
 
-module.exports = async function (context, req) {
-  try {
-    if (!req.body) {
-      context.res = {
-        status: 400,
-        body: "Please pass a request body",
-      };
-      return;
-    }
+const schema = Joi.object().keys({
+  blog: Joi.string().required(),
+  title: Joi.string().required(),
+  content: Joi.string().required(),
+});
 
-    const { blog, title, content } = req.body;
-
-    if (!blog || !title || !content) {
-      context.res = {
-        status: 400,
-        body: "Please pass blog, title and content",
-      };
-      return;
-    }
-
-    const entity = {
-      PartitionKey: { '_': blog },
-      RowKey: { '_': new Date().getTime().toString() },
-      title: { '_': title },
-      content: { '_': content },
-    };
-
-    const result = await insertEntity("Posts", entity);
-
-    context.res = {
-      body: result,
-    };
-  } catch (error) {
+const createPost = new MiddlewareHandler()
+  .use((context) => {
+    validateBody(context, context.req.body, schema);
+    context.next();
+  })
+  .use(createPostHandler)
+  .catch((error, context) => {
     context.res = {
       status: 500,
       body: error.message,
     };
-  }
-};
+    context.done();
+  })
+  .listen();
+
+module.exports = createPost;
